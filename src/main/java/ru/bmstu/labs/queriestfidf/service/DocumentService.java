@@ -77,12 +77,19 @@ public class DocumentService {
         for (Document document : documents) {
             List<DocumentWord> documentWords = documentWordRepository.getByDocument(document);
 
-            int length = 0;
+            double tfLength = 0;
+            double logTfLength = 0;
             for (DocumentWord documentWord : documentWords) {
-                length += documentWord.getFrequency() * documentWord.getFrequency();
+                Word word = wordRepository.getById(documentWord.getWord().getId());
+                double idfMultiply = word.getIdf().doubleValue() * word.getIdf().doubleValue();
+                logTfLength += (Math.log(documentWord.getFrequency() + 1) * Math.log(documentWord.getFrequency() + 1))
+                        * idfMultiply;
+                tfLength += (documentWord.getFrequency() * documentWord.getFrequency())
+                        * idfMultiply;
             }
 
-            document.setLength(BigDecimal.valueOf(Math.sqrt(length)));
+            document.setTfLength(BigDecimal.valueOf(Math.sqrt(tfLength)));
+            document.setLogTfLength(BigDecimal.valueOf(Math.sqrt(logTfLength)));
             documentRepository.save(document);
         }
     }

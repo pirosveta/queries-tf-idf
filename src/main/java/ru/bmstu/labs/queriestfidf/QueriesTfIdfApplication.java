@@ -41,15 +41,15 @@ public class QueriesTfIdfApplication {
         List<Map.Entry<Document, Double>> knotRelevance = getRelevanceForQuery(knotQuery);
         List<Map.Entry<Document, Double>> tsrRelevance = getRelevanceForQuery(tsrQuery);
 
-        printRelevanceToFile(triggerRelevance, "trigger-relevance-1");
-        printRelevanceToFile(knotRelevance, "knot-relevance-1");
-        printRelevanceToFile(tsrRelevance, "tsr-relevance-1");
+        printRelevanceToFile(triggerRelevance, "trigger-relevance-2");
+        printRelevanceToFile(knotRelevance, "knot-relevance-2");
+        printRelevanceToFile(tsrRelevance, "tsr-relevance-2");
     }
 
     private static void initializeDatabase() {
 //        documentService.fillLemmasFieldForAll();
-//        documentService.fillLengthFieldForAll();
 //        wordService.countIdfForAll();
+//        documentService.fillLengthFieldForAll();
     }
 
     private static List<Map.Entry<Document, Double>> getRelevanceForQuery(String query) {
@@ -66,14 +66,15 @@ public class QueriesTfIdfApplication {
                     Word word = wordService.getById(queryValue.getKey());
                     Optional<DocumentWord> documentWord = documentWordService.getByDocumentAndWord(document, word);
                     if (documentWord.isPresent()) {
-                        relevanceValue += (documentWord.get().getFrequency() * word.getIdf().doubleValue())
-                         * queryValue.getValue();    // Using of tf
-                        /*relevanceValue += (Math.log(documentWord.get().getFrequency() + 1) * word.getIdf().doubleValue())
-                                * Math.log(queryValue.getValue() + 1); */   // Using of log(tf+1)
+                       /* relevanceValue += (documentWord.get().getFrequency() * word.getIdf().doubleValue())
+                         * queryValue.getValue();*/    // Using of tf
+                        relevanceValue += (Math.log(documentWord.get().getFrequency() + 1) * word.getIdf().doubleValue())
+                                * Math.log(queryValue.getValue() + 1);    // Using of log(tf+1)
                     }
                 }
             }
-            relevanceValue /= document.getLength().doubleValue();
+//            relevanceValue /= document.getTfLength().doubleValue();
+            relevanceValue /= document.getLogTfLength().doubleValue();
 
             relevances.put(document, relevanceValue);
         }
@@ -110,7 +111,8 @@ public class QueriesTfIdfApplication {
 
         double length = 0;
         for (Map.Entry<Integer, Integer> entry : frequencyDictionary.entrySet()) {
-            length += entry.getValue() * entry.getValue();
+//            length += entry.getValue() * entry.getValue();
+            length += Math.log(entry.getValue() + 1) * Math.log(entry.getValue() + 1);
         }
         length = Math.sqrt(length);
 
