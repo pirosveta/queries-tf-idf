@@ -28,7 +28,11 @@ public class Document {
     @Column(columnDefinition = "text")
     private String lemmas;
 
-    private BigDecimal length;
+    @Column(name = "tf_length")
+    private BigDecimal tfLength;
+
+    @Column(name = "log_tf_length")
+    private BigDecimal logTfLength;
 
     @OneToMany(mappedBy = "document")
     private Set<DocumentWord> documentWords = new LinkedHashSet<>();
