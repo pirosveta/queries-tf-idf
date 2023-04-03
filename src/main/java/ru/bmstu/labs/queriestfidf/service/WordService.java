@@ -1,6 +1,6 @@
 package ru.bmstu.labs.queriestfidf.service;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.bmstu.labs.queriestfidf.model.Word;
 import ru.bmstu.labs.queriestfidf.repository.DocumentRepository;
@@ -12,12 +12,12 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class WordService {
 
-    private WordRepository wordRepository;
-    private DocumentWordRepository documentWordRepository;
-    private DocumentRepository documentRepository;
+    private final WordRepository wordRepository;
+    private final DocumentWordRepository documentWordRepository;
+    private final DocumentRepository documentRepository;
 
     public Optional<Word> getByValue(String value) {
         return wordRepository.getByValue(value);

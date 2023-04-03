@@ -1,6 +1,6 @@
 package ru.bmstu.labs.queriestfidf.service;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.bmstu.labs.queriestfidf.Lemmatizer;
 import ru.bmstu.labs.queriestfidf.model.Document;
@@ -17,16 +17,14 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class DocumentService {
 
-    private DocumentRepository documentRepository;
-    private DocumentWordRepository documentWordRepository;
-    private WordRepository wordRepository;
+    private final DocumentRepository documentRepository;
+    private final DocumentWordRepository documentWordRepository;
+    private final WordRepository wordRepository;
 
-    private Lemmatizer lemmatizer;
-
-//    private Logger log = LoggerFactory.getLogger(DocumentService.class);
+    private final Lemmatizer lemmatizer;
 
     public List<Document> getEntities() {
         return documentRepository.findAll();
