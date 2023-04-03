@@ -5,5 +5,5 @@ import org.springframework.stereotype.Repository;
 import ru.bmstu.labs.queriestfidf.model.Document;
 
 @Repository
-public interface DocumentRepository extends JpaRepository<Document, Long> {
+public interface DocumentRepository extends JpaRepository<Document, Integer> {
 }

@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface DocumentWordRepository extends JpaRepository<DocumentWord, Long> {
+public interface DocumentWordRepository extends JpaRepository<DocumentWord, Integer> {
 
     Optional<DocumentWord> getByDocumentAndWord(Document document, Word word);
 
