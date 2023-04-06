@@ -24,7 +24,7 @@ public class WordService {
     }
 
     public Word getById(Integer id) {
-        return wordRepository.getById(id);
+        return wordRepository.findById(id).orElseGet(Word::new);
     }
 
     public void countIdfForAll() {

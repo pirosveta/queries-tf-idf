@@ -11,5 +11,6 @@ public interface WordRepository extends JpaRepository<Word, Integer> {
 
     Optional<Word> getByValue(String value);
 
-    Word getById(Integer id);
+    @Override
+    Optional<Word> findById(Integer id);
 }
