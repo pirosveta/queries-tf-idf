@@ -5,9 +5,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
 import ru.bmstu.labs.queriestfidf.model.Document;
 import ru.bmstu.labs.queriestfidf.model.DocumentWord;
+import ru.bmstu.labs.queriestfidf.model.Query;
 import ru.bmstu.labs.queriestfidf.model.Word;
 import ru.bmstu.labs.queriestfidf.service.DocumentService;
 import ru.bmstu.labs.queriestfidf.service.DocumentWordService;
+import ru.bmstu.labs.queriestfidf.service.QueryService;
 import ru.bmstu.labs.queriestfidf.service.WordService;
 
 import java.io.BufferedWriter;
@@ -21,29 +23,36 @@ public class QueriesTfIdfApplication {
     private static DocumentService documentService;
     private static WordService wordService;
     private static DocumentWordService documentWordService;
+    private static QueryService queryService;
+
     private static Lemmatizer lemmatizer;
+    private static CalculationMethod calculationMethod;
 
     public static void main(String[] args) {
         ApplicationContext applicationContext = SpringApplication.run(ru.bmstu.labs.queriestfidf.QueriesTfIdfApplication.class, args);
 
+        /**
+         * Services initialization
+         */
         documentService = applicationContext.getBean(DocumentService.class);
         wordService = applicationContext.getBean(WordService.class);
         documentWordService = applicationContext.getBean(DocumentWordService.class);
+        queryService = applicationContext.getBean(QueryService.class);
+
+        /**
+         * Additional beans initialization
+         */
         lemmatizer = applicationContext.getBean(Lemmatizer.class);
 
+        /**
+         * Database initialization
+         */
         initializeDatabase();
 
-        String triggerQuery = "«Самый умный конь кино» умел сидеть на стуле, развязывать верёвки и стрелять из пистолета";
-        String knotQuery = "«Виктория» и «принц Альберт» — галстучные узлы";
-        String tsrQuery = "Международный конгресс по правописанию английского языка одобрил переход на пересмотренное традиционное правописание";
-
-        List<Map.Entry<Document, Double>> triggerRelevance = getRelevanceForQuery(triggerQuery);
-        List<Map.Entry<Document, Double>> knotRelevance = getRelevanceForQuery(knotQuery);
-        List<Map.Entry<Document, Double>> tsrRelevance = getRelevanceForQuery(tsrQuery);
-
-        printRelevanceToFile(triggerRelevance, "trigger-relevance-2");
-        printRelevanceToFile(knotRelevance, "knot-relevance-2");
-        printRelevanceToFile(tsrRelevance, "tsr-relevance-2");
+        /**
+         * Relevance calculation for all methods
+         */
+        calculate();
     }
 
     private static void initializeDatabase() {
@@ -52,8 +61,33 @@ public class QueriesTfIdfApplication {
 //        documentService.fillLengthFieldForAll();
     }
 
-    private static List<Map.Entry<Document, Double>> getRelevanceForQuery(String query) {
-        List<String> lemmas = lemmatizer.extractLemmasFromText(query);
+    private static void calculate() {
+        Arrays.stream(CalculationMethod.values()).forEach(m -> {
+            StringBuilder prefix = new StringBuilder();
+            calculationMethod = m;
+
+            List<Map.Entry<Document, Double>> triggerRelevance = getRelevanceForQuery(1);
+            List<Map.Entry<Document, Double>> knotRelevance = getRelevanceForQuery(2);
+            List<Map.Entry<Document, Double>> tsrRelevance = getRelevanceForQuery(3);
+
+            switch (calculationMethod) {
+                case VECTOR_MODEL_TF -> prefix.append("vm-tf");
+                case VECTOR_MODEL_LOG_TF -> prefix.append("vm-log-tf");
+                case LANGUAGE_MODEL_LAMBDA_0_5 -> prefix.append("lm-lambda-0.5");
+                case LANGUAGE_MODEL_LAMBDA_0_9 -> prefix.append("lm-lambda-0.9");
+            }
+            prefix.append("-");
+
+            printRelevanceToFile(triggerRelevance, prefix + "trigger-relevance");
+            printRelevanceToFile(knotRelevance, prefix + "knot-relevance");
+            printRelevanceToFile(tsrRelevance, prefix + "tsr-relevance");
+        });
+    }
+
+    private static List<Map.Entry<Document, Double>> getRelevanceForQuery(Integer id) {
+        Query query = queryService.getEntity(id);
+
+        List<String> lemmas = lemmatizer.extractLemmasFromText(query.getValue());
         HashMap<Integer, Double> vector = getVectorOfQuery(lemmas);
 
         List<Document> documents = documentService.getEntities();
@@ -66,15 +100,22 @@ public class QueriesTfIdfApplication {
                     Word word = wordService.getById(queryValue.getKey());
                     Optional<DocumentWord> documentWord = documentWordService.getByDocumentAndWord(document, word);
                     if (documentWord.isPresent()) {
-                       /* relevanceValue += (documentWord.get().getFrequency() * word.getIdf().doubleValue())
-                         * queryValue.getValue();*/    // Using of tf
-                        relevanceValue += (Math.log(documentWord.get().getFrequency() + 1) * word.getIdf().doubleValue())
-                                * Math.log(queryValue.getValue() + 1);    // Using of log(tf+1)
+                        switch (calculationMethod) {
+                            case VECTOR_MODEL_TF ->
+                                    relevanceValue += (documentWord.get().getFrequency() * word.getIdf().doubleValue())
+                                            * queryValue.getValue();                // Using of tf
+                            case VECTOR_MODEL_LOG_TF ->
+                                    relevanceValue += (Math.log(documentWord.get().getFrequency() + 1) * word.getIdf().doubleValue())
+                                            * Math.log(queryValue.getValue() + 1);  // Using of log(tf+1)
+                        }
                     }
                 }
             }
-//            relevanceValue /= document.getTfLength().doubleValue();
-            relevanceValue /= document.getLogTfLength().doubleValue();
+
+            switch (calculationMethod) {
+                case VECTOR_MODEL_TF -> relevanceValue /= document.getTfLength().doubleValue();
+                case VECTOR_MODEL_LOG_TF -> relevanceValue /= document.getLogTfLength().doubleValue();
+            }
 
             relevances.put(document, relevanceValue);
         }
@@ -111,8 +152,10 @@ public class QueriesTfIdfApplication {
 
         double length = 0;
         for (Map.Entry<Integer, Integer> entry : frequencyDictionary.entrySet()) {
-//            length += entry.getValue() * entry.getValue();
-            length += Math.log(entry.getValue() + 1) * Math.log(entry.getValue() + 1);
+            switch (calculationMethod) {
+                case VECTOR_MODEL_TF -> length += entry.getValue() * entry.getValue();
+                case VECTOR_MODEL_LOG_TF -> length += Math.log(entry.getValue() + 1) * Math.log(entry.getValue() + 1);
+            }
         }
         length = Math.sqrt(length);
 
