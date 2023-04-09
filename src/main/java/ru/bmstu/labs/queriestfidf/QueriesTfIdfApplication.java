@@ -94,11 +94,16 @@ public class QueriesTfIdfApplication {
             printRelevanceToFile(knotRelevance, prefix + "knot-relevance");
             printRelevanceToFile(tsrRelevance, prefix + "tsr-relevance");
 
+            double triggerNdcg = ndcgCalculate(1, triggerRelevance);
+            double knotNdcg = ndcgCalculate(2, knotRelevance);
+            double tsrNdcg = ndcgCalculate(3, tsrRelevance);
+
             ndcgs.put(m, new HashMap<>() {{
-                put("trigger", ndcgCalculate(1, triggerRelevance));
+                put("average", (triggerNdcg + knotNdcg + tsrNdcg) / 3);
+                put("trigger", triggerNdcg);
+                put("knot", knotNdcg);
+                put("tsr", tsrNdcg);
             }});
-            ndcgs.get(m).put("knot", ndcgCalculate(2, knotRelevance));
-            ndcgs.get(m).put("tsr", ndcgCalculate(3, tsrRelevance));
         });
 
         printNdcgsToFile(ndcgs);
