@@ -7,6 +7,7 @@ import ru.bmstu.labs.queriestfidf.model.DocumentWord;
 import ru.bmstu.labs.queriestfidf.model.Word;
 import ru.bmstu.labs.queriestfidf.repository.DocumentWordRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -17,6 +18,10 @@ public class DocumentWordService {
 
     public Optional<DocumentWord> getByDocumentAndWord(Document document, Word word) {
         return documentWordRepository.getByDocumentAndWord(document, word);
+    }
+
+    public List<DocumentWord> getByWord(Word word) {
+        return documentWordRepository.getByWord(word);
     }
 
 }

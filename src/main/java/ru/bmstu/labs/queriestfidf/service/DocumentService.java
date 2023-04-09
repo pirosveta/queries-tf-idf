@@ -30,6 +30,10 @@ public class DocumentService {
         return documentRepository.findAll();
     }
 
+    public Document getEntity(Integer id) {
+        return documentRepository.findById(id).orElseGet(Document::new);
+    }
+
     public void fillLemmasFieldForAll() {
         List<Document> documents = documentRepository.findAll();
 
