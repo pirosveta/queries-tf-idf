@@ -34,6 +34,9 @@ public class Document {
     @Column(name = "log_tf_length")
     private BigDecimal logTfLength;
 
+    @Column(name = "length")
+    private Integer length;
+
     @OneToMany(mappedBy = "document")
     private Set<DocumentWord> documentWords = new LinkedHashSet<>();
 }

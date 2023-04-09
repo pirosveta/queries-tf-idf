@@ -35,6 +35,7 @@ public class DocumentService {
 
         for (Document document : documents) {
             List<String> lemmas = lemmatizer.extractLemmasFromText(document.getValue());
+            document.setLength(lemmas.size());
             document.setLemmas(lemmas.stream().map(Objects::toString).collect(Collectors.joining("@")));
             document = documentRepository.save(document);
 
