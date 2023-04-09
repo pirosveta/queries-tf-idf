@@ -83,7 +83,7 @@ public class DocumentService {
             double tfLength = 0;
             double logTfLength = 0;
             for (DocumentWord documentWord : documentWords) {
-                Word word = wordRepository.getById(documentWord.getWord().getId());
+                Word word = wordRepository.findById(documentWord.getWord().getId()).orElseGet(Word::new);
                 double idfMultiply = word.getIdf().doubleValue() * word.getIdf().doubleValue();
                 logTfLength += (Math.log(documentWord.getFrequency() + 1) * Math.log(documentWord.getFrequency() + 1))
                         * idfMultiply;
