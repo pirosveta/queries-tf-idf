@@ -1,6 +1,6 @@
 package ru.bmstu.labs.queriestfidf.service;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.bmstu.labs.queriestfidf.Lemmatizer;
 import ru.bmstu.labs.queriestfidf.model.Document;
@@ -17,19 +17,21 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class DocumentService {
 
-    private DocumentRepository documentRepository;
-    private DocumentWordRepository documentWordRepository;
-    private WordRepository wordRepository;
+    private final DocumentRepository documentRepository;
+    private final DocumentWordRepository documentWordRepository;
+    private final WordRepository wordRepository;
 
-    private Lemmatizer lemmatizer;
-
-//    private Logger log = LoggerFactory.getLogger(DocumentService.class);
+    private final Lemmatizer lemmatizer;
 
     public List<Document> getEntities() {
         return documentRepository.findAll();
+    }
+
+    public Document getEntity(Integer id) {
+        return documentRepository.findById(id).orElseGet(Document::new);
     }
 
     public void fillLemmasFieldForAll() {
@@ -37,6 +39,7 @@ public class DocumentService {
 
         for (Document document : documents) {
             List<String> lemmas = lemmatizer.extractLemmasFromText(document.getValue());
+            document.setLength(lemmas.size());
             document.setLemmas(lemmas.stream().map(Objects::toString).collect(Collectors.joining("@")));
             document = documentRepository.save(document);
 
@@ -80,7 +83,7 @@ public class DocumentService {
             double tfLength = 0;
             double logTfLength = 0;
             for (DocumentWord documentWord : documentWords) {
-                Word word = wordRepository.getById(documentWord.getWord().getId());
+                Word word = wordRepository.findById(documentWord.getWord().getId()).orElseGet(Word::new);
                 double idfMultiply = word.getIdf().doubleValue() * word.getIdf().doubleValue();
                 logTfLength += (Math.log(documentWord.getFrequency() + 1) * Math.log(documentWord.getFrequency() + 1))
                         * idfMultiply;

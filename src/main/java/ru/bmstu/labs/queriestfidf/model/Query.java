@@ -11,11 +11,11 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Entity
-@Table(schema = "public", name = "documents")
+@Table(schema = "public", name = "queries")
 @Getter
 @Setter
 @ToString
-public class Document {
+public class Query {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,18 +25,6 @@ public class Document {
     @Column(columnDefinition = "text")
     private String value;
 
-    @Column(columnDefinition = "text")
-    private String lemmas;
-
-    @Column(name = "tf_length")
-    private BigDecimal tfLength;
-
-    @Column(name = "log_tf_length")
-    private BigDecimal logTfLength;
-
-    @Column(name = "length")
-    private Integer length;
-
-    @OneToMany(mappedBy = "document")
-    private Set<DocumentWord> documentWords = new LinkedHashSet<>();
+    @OneToMany(mappedBy = "query")
+    private Set<QueryDocument> queryDocuments = new LinkedHashSet<>();
 }
